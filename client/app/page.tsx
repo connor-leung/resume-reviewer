@@ -1,10 +1,16 @@
 "use client";
 import { useState, ChangeEvent, FormEvent } from 'react';
 
-interface Result {
+interface SuccessResult {
   score: number;
-  [key: string]: any; // For any additional fields that may be in the result
+  [key: string]: any; 
 }
+
+interface ErrorResult {
+  error: string;
+}
+
+type Result = SuccessResult | ErrorResult;
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -34,11 +40,11 @@ export default function Home() {
         body: formData,
       });
 
-      const data: Result = await response.json();
+      const data: SuccessResult = await response.json();
       setResult(data);
     } catch (error) {
       console.error('Error:', error);
-      setResult({ error: 'Something went wrong.' });
+      setResult({ error: 'Something went wrong.' } as ErrorResult); 
     }
   };
 
@@ -86,8 +92,14 @@ export default function Home() {
       {result && (
         <div className="mt-8 w-full max-w-lg bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-4">Result:</h2>
-          <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">{JSON.stringify(result.score, null, 2)}</pre>
-          <progress value={result.score} max="100" className="w-full"></progress>
+          {'score' in result ? (
+            <>
+              <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">{JSON.stringify(result.score, null, 2)}</pre>
+              <progress value={result.score} max="100" className="w-full"></progress>
+            </>
+          ) : (
+            <p className="text-red-500">{result.error}</p>
+          )}
         </div>
       )}
     </div>

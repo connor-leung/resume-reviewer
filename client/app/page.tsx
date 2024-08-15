@@ -38,7 +38,7 @@ export default function Home() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API;
-      console.log('API endpoint:', apiUrl);
+      // console.log('API endpoint:', apiUrl);
       if (!apiUrl) {
         throw new Error('API endpoint is not defined in the environment variables');
       }

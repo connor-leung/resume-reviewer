@@ -1,14 +1,27 @@
 "use client";
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
+
+interface Result {
+  score: number;
+  [key: string]: any; // For any additional fields that may be in the result
+}
 
 export default function Home() {
-  const [file, setFile] = useState(null);
-  const [jobType, setJobType] = useState('SWE');
-  const [jobDescription, setJobDescription] = useState('');
-  const [result, setResult] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [jobType, setJobType] = useState<string>('SWE');
+  const [jobDescription, setJobDescription] = useState<string>('');
+  const [result, setResult] = useState<Result | null>(null);
 
-  const handleSubmit = async (e) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!file) return;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -21,7 +34,7 @@ export default function Home() {
         body: formData,
       });
 
-      const data = await response.json();
+      const data: Result = await response.json();
       setResult(data);
     } catch (error) {
       console.error('Error:', error);
@@ -39,7 +52,7 @@ export default function Home() {
             type="file"
             id="resume"
             accept=".pdf"
-            onChange={(e) => setFile(e.target.files[0])}
+            onChange={handleFileChange}
             required
             className="w-full p-3 border border-gray-300 rounded-lg"
           />
@@ -62,7 +75,7 @@ export default function Home() {
             id="job_description"
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
-            rows="6"
+            rows={6}
             className="w-full p-3 border border-gray-300 rounded-lg"
             required
           ></textarea>
@@ -75,7 +88,6 @@ export default function Home() {
           <h2 className="text-2xl font-bold mb-4">Result:</h2>
           <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">{JSON.stringify(result.score, null, 2)}</pre>
           <progress value={result.score} max="100" className="w-full"></progress>
-
         </div>
       )}
     </div>

@@ -1,5 +1,7 @@
 "use client";
 import { useState, ChangeEvent, FormEvent } from 'react';
+import dotenv from 'dotenv';
+dotenv.config();
 
 interface SuccessResult {
   score: number;
@@ -35,7 +37,12 @@ export default function Home() {
     formData.append('job_description', jobDescription);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/parse_resume', {
+      const apiUrl = process.env.NEXT_PUBLIC_API;
+      console.log('API endpoint:', apiUrl);
+      if (!apiUrl) {
+        throw new Error('API endpoint is not defined in the environment variables');
+      }
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       });

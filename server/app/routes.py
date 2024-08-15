@@ -34,9 +34,9 @@ def parse_resume_route():
         resume_text = extract_text_from_pdf(filepath)
 
         job_description = request.form.get('job_description', '')
-        job_type = request.form.get('job_type', '')  
+        job_type = request.form.get('job_type', '')
         parsed_data = parse_resume(resume_text, job_type, job_description)
-        score = score_resume(parsed_data, job_description, job_type) 
+        score = score_resume(parsed_data, job_description, job_type)
 
         return jsonify({
             "parsed_data": parsed_data,

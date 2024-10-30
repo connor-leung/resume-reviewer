@@ -2,23 +2,20 @@ import spacy
 import pandas as pd
 import re
 
-
 nlp = spacy.load("en_core_web_sm")
 
 def parse_resume(resume_text, job_type, job_description):
-
     job_type = job_type.strip()
 
- 
     swe_csv_path = "data/SWE.csv"
     business_csv_path = "data/Business.csv"
 
-    skills = []
-
     if job_type == "SWE":
-        skills = pd.read_csv(swe_csv_path).iloc[:, 0].tolist()  
+        skills = pd.read_csv(swe_csv_path).iloc[:, 0].tolist()
     elif job_type == "Business":
-        skills = pd.read_csv(business_csv_path).iloc[:, 0].tolist()  
+        skills = pd.read_csv(business_csv_path).iloc[:, 0].tolist()
+    else:
+        skills = [] 
 
     parsed_data = {
         "name": None,
@@ -27,11 +24,11 @@ def parse_resume(resume_text, job_type, job_description):
         "skills": [],
         "education": [],
         "experience": [],
-        "keywords": [],  
+        "keywords": [],
         "linkedin": None,
         "github": None,
         "portfolio": None,
-        "job_description_keywords": [] 
+        "job_description_keywords": []
     }
 
     doc = nlp(resume_text)
@@ -44,13 +41,11 @@ def parse_resume(resume_text, job_type, job_description):
     for token in doc:
         if token.like_email:
             parsed_data["email"] = token.text
-
-    for token in doc:
         if token.like_num and len(token.text) >= 10:
             parsed_data["phone"] = token.text
 
     for token in doc:
-        if token.text.lower() in [skill.lower() for skill in skills]: 
+        if token.text.lower() in [skill.lower() for skill in skills]:
             parsed_data["skills"].append(token.text)
 
     degrees = ["BSc", "MSc", "PhD", "Bachelor", "Master", "Doctorate"]
@@ -84,7 +79,7 @@ def parse_resume(resume_text, job_type, job_description):
             parsed_data["portfolio"] = url
 
     for token in job_doc:
-        if token.is_alpha and len(token.text) > 2:  
+        if token.is_alpha and len(token.text) > 2:
             parsed_data["job_description_keywords"].append(token.text.lower())
 
     return parsed_data

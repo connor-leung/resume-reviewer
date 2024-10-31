@@ -1,46 +1,26 @@
-from flask import Blueprint, request, jsonify
-from werkzeug.utils import secure_filename
-import os
-from .parser import parse_resume
-from .pdf_parser import extract_text_from_pdf
-from .scorer import score_resume
+from fastapi import APIRouter, HTTPException
+from app.services.parser import parse_resume
+from app.services.scorer import score_resume
+from app.schemas.models import ResumeRequest, ResumeResponse
 
-bp = Blueprint('api', __name__)
+router = APIRouter()
 
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
-ALLOWED_EXTENSIONS = {'pdf'}
+@router.get("/status")
+async def get_status():
+    return {"status": "API is running"}
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+@router.post("/parse_resume", response_model=ResumeResponse)
+async def parse_resume_endpoint(request: ResumeRequest):
+    try:
+        parsed_data = parse_resume(request.resume_text, request.job_type, request.job_description)
+        return parsed_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@bp.route('/api/parse_resume', methods=['POST'])
-def parse_resume_route():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-    
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
-        
-        resume_text = extract_text_from_pdf(filepath)
-
-        job_description = request.form.get('job_description', '')
-        job_type = request.form.get('job_type', '')
-        parsed_data = parse_resume(resume_text, job_type, job_description)
-        score = score_resume(parsed_data, job_description, job_type)
-
-        return jsonify({
-            "parsed_data": parsed_data,
-            "score": score
-        })
-    else:
-        return jsonify({"error": "Invalid file type"}), 400
+@router.post("/score")
+async def score_endpoint(data: dict):
+    try:
+        score = score_resume(data)
+        return {"score": score}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
